@@ -1,0 +1,157 @@
+From 0eb7f3557b6f9ebaa2e1daf99ca43174e56a98df Mon Sep 17 00:00:00 2001
+From: Monica Vani <monica.afro.cv@gmail.com>
+Date: Fri, 2 Dec 2016 04:31:20 -0200
+Subject: [PATCH 1/2] Fixed bug 699155! Gnome calculator can now provide unit
+ conversion to feet and inches.
+
+---
+ gnome-calculator/lib/unit.vala            | 55 ++++++++++++++++++++++++++-----
+ gnome-calculator/src/math-converter.vala  | 10 +++---
+ gnome-calculator/tests/test-equation.vala |  5 +--
+ 3 files changed, 56 insertions(+), 14 deletions(-)
+
+diff --git a/gnome-calculator/lib/unit.vala b/gnome-calculator/lib/unit.vala
+index 7b6f5b6..7425ff8 100644
+--- a/gnome-calculator/lib/unit.vala
++++ b/gnome-calculator/lib/unit.vala
+@@ -49,9 +49,12 @@ public class UnitManager : Object
+         length_category.add_unit (new Unit ("fathom", _("Fathoms"), dpgettext2 (null, "unit-format", "%s ftm"), "1.8288x", "x/1.8288", dpgettext2 (null, "unit-symbols", "fathom,fathoms,ftm")));
+         length_category.add_unit (new Unit ("meter", _("Meters"), dpgettext2 (null, "unit-format", "%s m"), "x", "x", dpgettext2 (null, "unit-symbols", "meter,meters,m")));
+         length_category.add_unit (new Unit ("yard", _("Yards"), dpgettext2 (null, "unit-format", "%s yd"), "0.9144x", "x/0.9144", dpgettext2 (null, "unit-symbols", "yard,yards,yd")));
+-        length_category.add_unit (new Unit ("foot", _("Feet"), dpgettext2 (null, "unit-format", "%s ft"), "0.3048x", "x/0.3048", dpgettext2 (null, "unit-symbols", "foot,feet,ft")));
++
++	length_category.add_unit (new UnitFeetAndInches ("feet-and-inches", _("Feet and Inches"), dpgettext2 (null, "unit-format", "%s ft %s in"), "0.3048x", "x/0.3048"));
++
++	length_category.add_unit (new Unit ("foot", _("Feet"), dpgettext2 (null, "unit-format", "%s ft"), "0.3048x", "x/0.3048", dpgettext2 (null, "unit-symbols", "foot,feet,ft")));
+         length_category.add_unit (new Unit ("inch", _("Inches"), dpgettext2 (null, "unit-format", "%s in"), "0.0254x", "x/0.0254", dpgettext2 (null, "unit-symbols", "inch,inches,in")));
+-        length_category.add_unit (new Unit ("centimeter", _("Centimeters"), dpgettext2 (null, "unit-format", "%s cm"), "x/100", "100x", dpgettext2 (null, "unit-symbols", "centimeter,centimeters,cm,cms")));
++	length_category.add_unit (new Unit ("centimeter", _("Centimeters"), dpgettext2 (null, "unit-format", "%s cm"), "x/100", "100x", dpgettext2 (null, "unit-symbols", "centimeter,centimeters,cm,cms")));
+         length_category.add_unit (new Unit ("millimeter", _("Millimeters"), dpgettext2 (null, "unit-format", "%s mm"), "x/1000", "1000x", dpgettext2 (null, "unit-symbols", "millimeter,millimeters,mm")));
+         length_category.add_unit (new Unit ("micrometer", _("Micrometers"), dpgettext2 (null, "unit-format", "%s μm"), "x/1000000", "1000000x", dpgettext2 (null, "unit-symbols", "micrometer,micrometers,um")));
+         length_category.add_unit (new Unit ("nanometer", _("Nanometers"), dpgettext2 (null, "unit-format", "%s nm"), "x/1000000000", "1000000000x", dpgettext2 (null, "unit-symbols", "nanometer,nanometers,nm")));
+@@ -79,10 +82,10 @@ public class UnitManager : Object
+         duration_category.add_unit (new Unit ("second", _("Seconds"), dpgettext2 (null, "unit-format", "%s s"), "x", "x", dpgettext2 (null, "unit-symbols", "second,seconds,s")));
+         duration_category.add_unit (new Unit ("millisecond", _("Milliseconds"), dpgettext2 (null, "unit-format", "%s ms"), "0.001x", "1000x", dpgettext2 (null, "unit-symbols", "millisecond,milliseconds,ms")));
+         duration_category.add_unit (new Unit ("microsecond", _("Microseconds"), dpgettext2 (null, "unit-format", "%s μs"), "0.000001x", "1000000x", dpgettext2 (null, "unit-symbols", "microsecond,microseconds,us,μs")));
+-        temperature_category.add_unit (new Unit ("degree-celcius", _("Celsius"), dpgettext2 (null, "unit-format", "%s ˚C"), "x+273.15", "x-273.15", dpgettext2 (null, "unit-symbols", "degC,˚C")));
+-        temperature_category.add_unit (new Unit ("degree-farenheit", _("Fahrenheit"), dpgettext2 (null, "unit-format", "%s ˚F"), "(x+459.67)*5/9", "x*9/5-459.67", dpgettext2 (null, "unit-symbols", "degF,˚F")));
+-        temperature_category.add_unit (new Unit ("degree-kelvin", _("Kelvin"), dpgettext2 (null, "unit-format", "%s K"), "x", "x", dpgettext2 (null, "unit-symbols", "K")));
+-        temperature_category.add_unit (new Unit ("degree-rankine", _("Rankine"), dpgettext2 (null, "unit-format", "%s ˚R"), "x*5/9", "x*9/5", dpgettext2 (null, "unit-symbols", "degR,˚R,˚Ra")));
++        temperature_category.add_unit (new Unit ("degree-celcius", _("Celsius"), dpgettext2 (null, "unit-format", "%s ˚C"), "x+273.15", "x-273.15", dpgettext2 (null, "unit-symbols", "degC,˚C,C,c,Celsius,celsius")));
++        temperature_category.add_unit (new Unit ("degree-farenheit", _("Fahrenheit"), dpgettext2 (null, "unit-format", "%s ˚F"), "(x+459.67)*5/9", "x*9/5-459.67", dpgettext2 (null, "unit-symbols", "degF,˚F,F,f,Fahrenheit,fahrenheit")));
++        temperature_category.add_unit (new Unit ("degree-kelvin", _("Kelvin"), dpgettext2 (null, "unit-format", "%s K"), "x", "x", dpgettext2 (null, "unit-symbols", "k,K,Kelvin,kelvin")));
++        temperature_category.add_unit (new Unit ("degree-rankine", _("Rankine"), dpgettext2 (null, "unit-format", "%s ˚R"), "x*5/9", "x*9/5", dpgettext2 (null, "unit-symbols", "degR,˚R,˚Ra,r,R,Rankine,rankine")));
+         /* We use IEC prefix for digital storage units. i.e. 1 kB = 1 KiloByte = 1000 bytes, and 1 KiB = 1 kibiByte = 1024 bytes */
+         digitalstorage_category.add_unit (new Unit ("bit", _("Bits"), dpgettext2 (null, "unit-format", "%s b"), "x/8", "8x", dpgettext2 (null, "unit-symbols", "bit,bits,b")));
+         digitalstorage_category.add_unit (new Unit ("byte", _("Bytes"), dpgettext2 (null, "unit-format", "%s B"), "x", "x", dpgettext2 (null, "unit-symbols", "byte,bytes,B")));
+@@ -332,7 +335,7 @@ public class Unit : Object
+     private string? to_function;
+     private Serializer serializer;
+ 
+-    public Unit (string name, string display_name, string format, string? from_function, string? to_function, string symbols)
++    public Unit (string name, string display_name, string format, string? from_function, string? to_function, string? symbols)
+     {
+         serializer = new Serializer (DisplayFormat.AUTOMATIC, 10, 2);
+         serializer.set_leading_digits (6);
+@@ -348,6 +351,16 @@ public class Unit : Object
+             _symbols.append (symbol_name);
+     }
+ 
++    public Serializer get_serializer ()
++    {
++    	   return serializer;
++    }
++
++    public string get_format ()
++    {
++    	   return _format;
++    }
++    
+     public bool matches_symbol (string symbol, bool case_sensitive = true)
+     {
+         foreach (var s in _symbols)
+@@ -390,7 +403,7 @@ public class Unit : Object
+         }
+     }
+ 
+-    public string format (Number x)
++    public virtual string format (Number x)
+     {
+         var number_text = serializer.to_string (x);
+         return _format.printf (number_text);
+@@ -409,6 +422,32 @@ public class Unit : Object
+     }
+ }
+ 
++public class UnitFeetAndInches : Unit
++{
++    private Unit _unit_inch;
++
++    public UnitFeetAndInches (string name, string display_name, string format, string? from_function, string? to_function)
++    {
++	base (name, display_name, format, from_function, to_function, null);
++	_unit_inch = new Unit ("inch", _("Inches"), dpgettext2 (null, "unit-format", "%s in"),
++		     	      	       "0.0254x", "x/0.0254", dpgettext2 (null, "unit-symbols", "inch,inches,in"));	
++    }
++
++    public override string format (Number x)
++    {
++	var ft = x.floor();
++
++	var in = x.fractional_part();
++	in = convert_from(in);
++	in = _unit_inch.convert_to(in);
++
++	var ft_text = get_serializer().to_string (ft);
++	var in_text = get_serializer().to_string (in);
++
++	return get_format().printf (ft_text, in_text);
++    }
++}
++
+ private class UnitSolveEquation : Equation
+ {
+     private Number x;
+diff --git a/gnome-calculator/src/math-converter.vala b/gnome-calculator/src/math-converter.vala
+index 0cf90ac..eba2652 100644
+--- a/gnome-calculator/src/math-converter.vala
++++ b/gnome-calculator/src/math-converter.vala
+@@ -130,10 +130,12 @@ public class MathConverter : Gtk.Grid
+ 
+                 foreach (var unit in category.get_units ())
+                 {
+-                    Gtk.TreeIter iter;
+-                    from_model.append (out iter, parent);
+-                    from_model.set (iter, 0, unit.display_name, 1, category, 2, unit, -1);
+-                }
++			if (unit.display_name != "Feet and Inches") {
++		      	   Gtk.TreeIter iter;
++                       	   from_model.append (out iter, parent);
++                       	   from_model.set (iter, 0, unit.display_name, 1, category, 2, unit, -1);
++		        }
++		}
+             }
+         }
+         else
+diff --git a/gnome-calculator/tests/test-equation.vala b/gnome-calculator/tests/test-equation.vala
+index d7e48ab..10e2a46 100644
+--- a/gnome-calculator/tests/test-equation.vala
++++ b/gnome-calculator/tests/test-equation.vala
+@@ -152,11 +152,12 @@ private void test_conversions ()
+ 
+     /* Temperature */
+     //test ("100˚C in ˚F", "", 0);
+-    //test ("0˚C in ˚F", "32", 0);
+-    //test ("0˚K in ˚C", "−273.15", 0);
++    //test ("0 ˚C in ˚F", "32", 0);
++    //test ("0 ˚K in ˚C", "−273.15", 0);
+     test ("100degC in degF", "212", 0);
+     test ("0degC in degF", "32", 0);
+     test ("0 K in degC", "−273.15", 0);
++    test ("0 k in c", "−273.15", 0);
+ 
+     /* Digital Storage */
+     test ("1000 bits in bytes", "125", 0);
+-- 
+2.9.3
+
