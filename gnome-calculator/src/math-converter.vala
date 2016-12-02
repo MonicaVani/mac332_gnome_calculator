@@ -130,10 +130,12 @@ public class MathConverter : Gtk.Grid
 
                 foreach (var unit in category.get_units ())
                 {
-                    Gtk.TreeIter iter;
-                    from_model.append (out iter, parent);
-                    from_model.set (iter, 0, unit.display_name, 1, category, 2, unit, -1);
-                }
+			if (unit.display_name != "Feet and Inches") {
+		      	   Gtk.TreeIter iter;
+                       	   from_model.append (out iter, parent);
+                       	   from_model.set (iter, 0, unit.display_name, 1, category, 2, unit, -1);
+		        }
+		}
             }
         }
         else
